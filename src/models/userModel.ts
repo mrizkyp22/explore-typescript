@@ -23,6 +23,7 @@ const userSchema = new Schema<IUser>({
 },
   {
     versionKey: false, // This removes the "__v" field from documents
+    collection: 'users'
   }
 );
 

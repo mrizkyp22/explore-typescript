@@ -1,6 +1,8 @@
 // abac.ts
-import { UserAttributes } from "../models/attributesTypes";
+import {Attribute } from "../models/attributesTypes";
 
-export const checkPrivileges = (userAttributes: UserAttributes, requiredAttribute: string): boolean => {
-    return userAttributes[requiredAttribute] === true;
+export const checkPrivileges = (privilegeAttributes: Attribute[], requiredAttribute: string): boolean => {
+    const attribute = privilegeAttributes.find(attr => attr.id === requiredAttribute);
+
+    return attribute ? attribute.status === true : false;
 };

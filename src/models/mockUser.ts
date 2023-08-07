@@ -1,8 +1,19 @@
-import { UserAttributes } from './attributesTypes';
+import { Privileges } from './attributesTypes';
 
-export const mockUser: UserAttributes = {
-    read_list_user: true,
-    read_detail_user: true,
-    create_new_user: true
-    // Add other attributes as needed
+export const mockPrivilege: Privileges = {
+    attributes: [
+        {
+            id: 'read_list_user',
+            status: true,
+        },
+        {
+            id: 'read_detail_user',
+            status: true,
+        },
+        {
+            id: 'create_new_user',
+            status: true,
+        }
+        // Add other attributes as needed
+    ],
 };

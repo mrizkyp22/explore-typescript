@@ -2,6 +2,7 @@ import express from 'express';
 import mongoose from 'mongoose';
 import bodyParser from 'body-parser';
 import userRoutes from './routes/userRoutes';
+import privilegeRoutes from './routes/privilegeRoutes'; // Add this line
 
 const app = express();
 
@@ -13,7 +14,8 @@ mongoose
   .catch(error => console.error('MongoDB connection error:', error));
 
 // Routes
-app.use('/api/user', userRoutes);
+app.use('/api/users', userRoutes);
+app.use('/api/privilege', privilegeRoutes); // Add this line
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {

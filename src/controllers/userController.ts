@@ -4,24 +4,24 @@ import * as encryptionHelpers from '../helpers/encryption';
 import { handleServerError, handleBadRequest, handleNotFound, handleNoAccess } from '../helpers/errorHandler';
 import { generateUserId } from '../helpers/generator';
 import { checkPrivileges } from '../helpers/privilege';
-import { UserAttributes } from '../models/attributesTypes';
-import { mockUser } from '../models/mockUser';
+import { Privileges, Attribute  } from '../models/attributesTypes';
+import { mockPrivilege } from '../models/mockUser';
+import Privilege from '../models/privilegeModel';
 
 export const registerUser = async (req: Request, res: Response) => {
     try {
-        const userAttributes: UserAttributes = mockUser;
+        const privilegeDocument: Privileges | null = await Privilege.findOne();
+        // Use the mock privilege if not found in the database
+        const privilegeAttributes: Attribute[] = privilegeDocument?.attributes || mockPrivilege.attributes;
+        const hasCreateUserPrivilege = checkPrivileges(privilegeAttributes, 'create_new_user');
 
-        // Check if the user has the required attribute
-        const hasReadListUserPrivilege = checkPrivileges(userAttributes, 'create_new_user');
-
-        if (!hasReadListUserPrivilege) {
-            return handleNoAccess(res,'Access forbidden. You do not have the necessary privilege.')
+        if (!hasCreateUserPrivilege) {
+            return handleNoAccess(res, 'Access forbidden. You do not have the necessary privilege.');
         }
 
         const { name, birth, location, email, phoneNumber, ...extraFields } = req.body;
         const loadedSecretKey = encryptionHelpers.loadedSecretKey;
 
-        // Check for additional fields in req.body
         if (Object.keys(extraFields).length > 0) {
             return handleBadRequest(res, 'Additional fields are not allowed');
         }
@@ -58,13 +58,15 @@ export const registerUser = async (req: Request, res: Response) => {
 
 export const getUsers = async (req: Request, res: Response) => {
     try {
-        const userAttributes: UserAttributes = mockUser;
+        const privilegeDocument: Privileges | null = await Privilege.findOne();
+        // Use the mock privilege if not found in the database
+        const privilegeAttributes: Attribute[] = privilegeDocument?.attributes || mockPrivilege.attributes;
 
         // Check if the user has the required attribute
-        const hasReadListUserPrivilege = checkPrivileges(userAttributes, 'read_list_user');
+        const hasReadListUserPrivilege = checkPrivileges(privilegeAttributes, 'read_list_user');
 
         if (!hasReadListUserPrivilege) {
-            return handleNoAccess(res,'Access forbidden. You do not have the necessary privilege.')
+            return handleNoAccess(res, 'Access forbidden. You do not have the necessary privilege.');
         }
 
         const { search, page, limit, ...otherQueries } = req.query as {
@@ -87,7 +89,7 @@ export const getUsers = async (req: Request, res: Response) => {
             return handleBadRequest(res, 'Additional queries are not allowed');
         }
 
-        const options: any = {
+        const options = {
             skip: page ? (parseInt(page) - 1) * parseInt(limit) : 0,
             limit: limit ? parseInt(limit) : 10,
         };
@@ -100,7 +102,7 @@ export const getUsers = async (req: Request, res: Response) => {
             User.countDocuments(query),
         ]);
 
-        const dataUsers = users.map((user: any) => ({
+        const dataUsers = users.map((user: IUser) => ({
             userId: user.userId,
             name: user.name,
             birth: user.birth,
@@ -122,13 +124,15 @@ export const getUsers = async (req: Request, res: Response) => {
 
 export const getUserById = async (req: Request, res: Response) => {
     try {
-        const userAttributes: UserAttributes = mockUser;
+        const privilegeDocument: Privileges | null = await Privilege.findOne();
+        // Use the mock privilege if not found in the database
+        const privilegeAttributes: Attribute[] = privilegeDocument?.attributes || mockPrivilege.attributes;
 
         // Check if the user has the required attribute
-        const hasReadListUserPrivilege = checkPrivileges(userAttributes, 'read_detail_user');
+        const hasReadDetailUserPrivilege = checkPrivileges(privilegeAttributes, 'read_detail_user');
 
-        if (!hasReadListUserPrivilege) {
-            return handleNoAccess(res,'Access forbidden. You do not have the necessary privilege.')
+        if (!hasReadDetailUserPrivilege) {
+            return handleNoAccess(res, 'Access forbidden. You do not have the necessary privilege.');
         }
 
         const userId = req.params.userId;
@@ -136,10 +140,10 @@ export const getUserById = async (req: Request, res: Response) => {
 
         if (!user) {
             console.log('User not found for userId:', userId);
-            return handleNotFound(res,'User not found')
+            return handleNotFound(res, 'User not found');
         }
 
-        const decryptedUser = {
+        const getUsers = (user: IUser) => ({
             userId: user.userId,
             name: user.name,
             birth: user.birth,
@@ -147,14 +151,15 @@ export const getUserById = async (req: Request, res: Response) => {
             email: encryptionHelpers.decrypt(user.email as string, user.loadedSecretKey),
             phoneNumber: encryptionHelpers.decrypt(user.phoneNumber as string, user.loadedSecretKey),
             createdAt: user.createdAt,
-        };
+        });
 
         res.status(200).json({
             code: 200,
             message: 'Get User details successfully',
-            data: decryptedUser,
+            data: getUsers(user),
         });
+
     } catch (error) {
-        handleServerError(res, error); // Make sure handleServerError is defined
+        handleServerError(res, error);
     }
 };
