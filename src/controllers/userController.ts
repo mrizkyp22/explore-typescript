@@ -4,13 +4,13 @@ import * as encryptionHelpers from '../helpers/encryption';
 import { handleServerError, handleBadRequest, handleNotFound, handleNoAccess } from '../helpers/errorHandler';
 import { generateUserId } from '../helpers/generator';
 import { checkPrivileges } from '../helpers/privilege';
-import { Privileges, Attribute  } from '../models/attributesTypes';
+import { Privileges, Attribute } from '../models/attributesTypes';
 import { mockPrivilege } from '../models/mockUser';
-import Privilege, {IPrivilege} from '../models/privilegeModel';
+import Privilege, { IPrivilege } from '../models/privilegeModel';
 
 export const registerUser = async (req: Request, res: Response) => {
     try {
-        const privilegeDocument: Privileges | null = await Privilege.findOne();
+        const privilegeDocument: IPrivilege | null = await Privilege.findOne();
         // Use the mock privilege if not found in the database
         const privilegeAttributes: Attribute[] = privilegeDocument?.attributes || mockPrivilege.attributes;
         const hasCreateUserPrivilege = checkPrivileges(privilegeAttributes, 'create_new_user');
@@ -44,12 +44,14 @@ export const registerUser = async (req: Request, res: Response) => {
         }
 
         const savedUser = await user.save();
+        const privilegeData = privilegeDocument ? { roleId: privilegeDocument.roleId } : null;
 
         res.status(201).json({
             code: 201,
             message: 'User registered successfully',
             data: {
                 userId: savedUser.userId,
+                roleid: privilegeData ? privilegeData.roleId : null
             },
         });
     } catch (error) {
@@ -59,7 +61,7 @@ export const registerUser = async (req: Request, res: Response) => {
 
 export const getUsers = async (req: Request, res: Response) => {
     try {
-        const privilegeDocument: Privileges | null = await Privilege.findOne();
+        const privilegeDocument: IPrivilege | null = await Privilege.findOne();
         // Use the mock privilege if not found in the database
         const privilegeAttributes: Attribute[] = privilegeDocument?.attributes || mockPrivilege.attributes;
 
@@ -106,6 +108,8 @@ export const getUsers = async (req: Request, res: Response) => {
         const dataUsers = users.map((user: IUser) => ({
             userId: user.userId,
             name: user.name,
+            roleid: user.roleId
+
         }));
 
         res.status(200).json({
@@ -142,15 +146,26 @@ export const getUserById = async (req: Request, res: Response) => {
             return handleNotFound(res, 'User not found');
         }
 
+        const privilegeAttribute = await Privilege.findOne({ roleId: user.roleId });
+
+        // Map privilege data to exclude _id from attributes
+        const dataPrivileges = privilegeAttribute ? {
+            attributes: privilegeAttribute.attributes.map(attr => ({
+                id: attr.id,
+                status: attr.status,
+            })),
+        } : null;
+
         const getUsers = (user: IUser) => ({
             userId: user.userId,
             name: user.name,
+            roleId: user.roleId,
             birth: user.birth,
             location: user.location,
             email: encryptionHelpers.decrypt(user.email as string, user.loadedSecretKey),
             phoneNumber: encryptionHelpers.decrypt(user.phoneNumber as string, user.loadedSecretKey),
             createdAt: user.createdAt,
-            privileges: user.privilege
+            privilege: dataPrivileges
         });
 
         res.status(200).json({
