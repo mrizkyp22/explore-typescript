@@ -8,3 +8,7 @@ export const handleServerError = (res: Response, error: any, statusCode: number 
 export const handleBadRequest = (res: Response, message: string) => {
     return res.status(400).json({ code: 400, message });
 };
+
+export const handleNotFound = (res: Response, message: string) => {
+    return res.status(404).json({ code: 404, message });
+};

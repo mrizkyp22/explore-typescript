@@ -1,7 +1,7 @@
 import { Request, Response } from 'express';
 import User, { IUser } from '../models/userModel';
 import * as encryptionHelpers from '../helpers/encryption';
-import { handleServerError, handleBadRequest } from '../helpers/errorHandler';
+import { handleServerError, handleBadRequest, handleNotFound } from '../helpers/errorHandler';
 import { generateUserId } from '../helpers/generator';
 
 export const registerUser = async (req: Request, res: Response) => {
@@ -106,7 +106,7 @@ export const getUserById = async (req: Request, res: Response) => {
 
         if (!user) {
             console.log('User not found for userId:', userId);
-            return res.status(404).json({ message: 'User not found' });
+            return handleNotFound(res,'User not found')
         }
 
         const decryptedUser = {
