@@ -12,3 +12,7 @@ export const handleBadRequest = (res: Response, message: string) => {
 export const handleNotFound = (res: Response, message: string) => {
     return res.status(404).json({ code: 404, message });
 };
+
+export const handleNoAccess = (res: Response, message: string) => {
+    return res.status(403).json({ code: 403, message });
+};
