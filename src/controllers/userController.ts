@@ -50,7 +50,6 @@ export const registerUser = async (req: Request, res: Response) => {
             message: 'User registered successfully',
             data: {
                 userId: savedUser.userId,
-                roleId:savedUser.roleId
             },
         });
     } catch (error) {
@@ -107,7 +106,6 @@ export const getUsers = async (req: Request, res: Response) => {
         const dataUsers = users.map((user: IUser) => ({
             userId: user.userId,
             name: user.name,
-            roleId: user.roleId,
         }));
 
         res.status(200).json({
@@ -147,12 +145,12 @@ export const getUserById = async (req: Request, res: Response) => {
         const getUsers = (user: IUser) => ({
             userId: user.userId,
             name: user.name,
-            roleId: user.roleId,
             birth: user.birth,
             location: user.location,
             email: encryptionHelpers.decrypt(user.email as string, user.loadedSecretKey),
             phoneNumber: encryptionHelpers.decrypt(user.phoneNumber as string, user.loadedSecretKey),
-            createdAt: user.createdAt
+            createdAt: user.createdAt,
+            privileges: user.privilege
         });
 
         res.status(200).json({
