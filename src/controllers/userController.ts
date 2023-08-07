@@ -6,7 +6,7 @@ import { generateUserId } from '../helpers/generator';
 import { checkPrivileges } from '../helpers/privilege';
 import { Privileges, Attribute  } from '../models/attributesTypes';
 import { mockPrivilege } from '../models/mockUser';
-import Privilege from '../models/privilegeModel';
+import Privilege, {IPrivilege} from '../models/privilegeModel';
 
 export const registerUser = async (req: Request, res: Response) => {
     try {
@@ -19,7 +19,7 @@ export const registerUser = async (req: Request, res: Response) => {
             return handleNoAccess(res, 'Access forbidden. You do not have the necessary privilege.');
         }
 
-        const { name, birth, location, email, phoneNumber, ...extraFields } = req.body;
+        const { name, roleId, birth, location, email, phoneNumber, ...extraFields } = req.body;
         const loadedSecretKey = encryptionHelpers.loadedSecretKey;
 
         if (Object.keys(extraFields).length > 0) {
@@ -29,6 +29,7 @@ export const registerUser = async (req: Request, res: Response) => {
         const user = new User({
             userId: generateUserId(),
             name,
+            roleId,
             birth,
             location,
             email: encryptionHelpers.encrypt(email),
@@ -48,7 +49,8 @@ export const registerUser = async (req: Request, res: Response) => {
             code: 201,
             message: 'User registered successfully',
             data: {
-                id: savedUser.userId,
+                userId: savedUser.userId,
+                roleId:savedUser.roleId
             },
         });
     } catch (error) {
@@ -95,7 +97,7 @@ export const getUsers = async (req: Request, res: Response) => {
         };
 
         const [users, userCount] = await Promise.all([
-            User.find(query, 'userId name birth location createdAt')
+            User.find(query, 'userId name roleId birth location createdAt')
                 .sort({ name: 1 })
                 .skip(options.skip)
                 .limit(options.limit),
@@ -105,8 +107,7 @@ export const getUsers = async (req: Request, res: Response) => {
         const dataUsers = users.map((user: IUser) => ({
             userId: user.userId,
             name: user.name,
-            birth: user.birth,
-            location: user.location,
+            roleId: user.roleId,
         }));
 
         res.status(200).json({
@@ -124,7 +125,7 @@ export const getUsers = async (req: Request, res: Response) => {
 
 export const getUserById = async (req: Request, res: Response) => {
     try {
-        const privilegeDocument: Privileges | null = await Privilege.findOne();
+        const privilegeDocument: IPrivilege | null = await Privilege.findOne();
         // Use the mock privilege if not found in the database
         const privilegeAttributes: Attribute[] = privilegeDocument?.attributes || mockPrivilege.attributes;
 
@@ -146,11 +147,12 @@ export const getUserById = async (req: Request, res: Response) => {
         const getUsers = (user: IUser) => ({
             userId: user.userId,
             name: user.name,
+            roleId: user.roleId,
             birth: user.birth,
             location: user.location,
             email: encryptionHelpers.decrypt(user.email as string, user.loadedSecretKey),
             phoneNumber: encryptionHelpers.decrypt(user.phoneNumber as string, user.loadedSecretKey),
-            createdAt: user.createdAt,
+            createdAt: user.createdAt
         });
 
         res.status(200).json({

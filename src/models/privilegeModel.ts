@@ -1,16 +1,16 @@
-import mongoose, { Document } from 'mongoose';
+import { Document, Schema, model } from 'mongoose';
 
-interface IAttribute {
+export interface IAttribute {
   id: string;
   status: boolean;
 }
 
-interface IPrivilege extends Document {
+export interface IPrivilege extends Document {
   roleId: string;
   attributes: IAttribute[];
 }
 
-const privilegeSchema = new mongoose.Schema({
+const privilegeSchema = new Schema<IPrivilege>({
   roleId: { type: String, required: true },
   attributes: [
     {
@@ -24,6 +24,4 @@ const privilegeSchema = new mongoose.Schema({
   collection: 'privileges'
 });
 
-const Privilege = mongoose.model<IPrivilege>('Privilege', privilegeSchema);
-
-export default Privilege;
+export default model<IPrivilege>('Privilege', privilegeSchema);
