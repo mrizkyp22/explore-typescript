@@ -4,11 +4,20 @@ import * as encryptionHelpers from '../helpers/encryption';
 import { handleServerError, handleBadRequest, handleNotFound, handleNoAccess } from '../helpers/errorHandler';
 import { generateUserId } from '../helpers/generator';
 import { checkPrivileges } from '../helpers/privilege';
-import { UserAttributes } from '../helpers/types';
-import { mockUser } from '../helpers/mockUser';
+import { UserAttributes } from '../models/attributesTypes';
+import { mockUser } from '../models/mockUser';
 
 export const registerUser = async (req: Request, res: Response) => {
     try {
+        const userAttributes: UserAttributes = mockUser;
+
+        // Check if the user has the required attribute
+        const hasReadListUserPrivilege = checkPrivileges(userAttributes, 'create_new_user');
+
+        if (!hasReadListUserPrivilege) {
+            return handleNoAccess(res,'Access forbidden. You do not have the necessary privilege.')
+        }
+
         const { name, birth, location, email, phoneNumber, ...extraFields } = req.body;
         const loadedSecretKey = encryptionHelpers.loadedSecretKey;
 

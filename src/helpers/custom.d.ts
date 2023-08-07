@@ -1,5 +1,5 @@
 // custom.d.ts
-import { UserAttributes } from './types';
+import { UserAttributes } from '../models/attributesTypes';
 
 declare module 'express-serve-static-core' {
     interface Request {
