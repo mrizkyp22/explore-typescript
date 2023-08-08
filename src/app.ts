@@ -14,8 +14,8 @@ mongoose
   .catch(error => console.error('MongoDB connection error:', error));
 
 // Routes
-app.use('/api/users', userRoutes);
-app.use('/api/privileges', privilegeRoutes); // Add this line
+app.use('/api/users/v1', userRoutes);
+app.use('/api/privileges/v1', privilegeRoutes); // Add this line
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
