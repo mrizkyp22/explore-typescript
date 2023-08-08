@@ -44,14 +44,14 @@ export const registerUser = async (req: Request, res: Response) => {
         }
 
         const savedUser = await user.save();
-        const privilegeData = privilegeDocument ? { roleId: privilegeDocument.roleId } : null;
+        // const privilegeData = privilegeDocument ? { roleId: privilegeDocument.roleId } : null;
 
         res.status(201).json({
             code: 201,
             message: 'User registered successfully',
             data: {
                 userId: savedUser.userId,
-                roleid: privilegeData ? privilegeData.roleId : null
+                roleid: savedUser.roleId
             },
         });
     } catch (error) {
