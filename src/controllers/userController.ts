@@ -98,19 +98,22 @@ export const getUsers = async (req: Request, res: Response) => {
         };
 
         const [users, userCount] = await Promise.all([
-            User.find(query, 'userId name roleId birth location createdAt')
+            User.find(query, 'userId name roleId birth location loadedSecretKey createdAt')
                 .sort({ name: 1 })
                 .skip(options.skip)
                 .limit(options.limit),
             User.countDocuments(query),
         ]);
 
-        const dataUsers = users.map((user: IUser) => ({
-            userId: user.userId,
-            name: user.name,
-            roleid: user.roleId
-
-        }));
+        const dataUsers = users.map((user: IUser) => {
+            const isSecure = user.loadedSecretKey ? true : false;
+            return {
+                userId: user.userId,
+                name: user.name,
+                roleid: user.roleId,
+                isSecure: isSecure
+            };
+        });
 
         res.status(200).json({
             code: 200,
@@ -156,22 +159,32 @@ export const getUserById = async (req: Request, res: Response) => {
             })),
         } : null;
 
-        const getUsers = (user: IUser) => ({
-            userId: user.userId,
-            name: user.name,
-            roleId: user.roleId,
-            birth: user.birth,
-            location: user.location,
-            email: encryptionHelpers.decrypt(user.email as string, user.loadedSecretKey),
-            phoneNumber: encryptionHelpers.decrypt(user.phoneNumber as string, user.loadedSecretKey),
-            createdAt: user.createdAt,
-            privilege: dataPrivileges
-        });
+        const dataUsers = (user: IUser) => {
+            const isSecure = user.loadedSecretKey ? true : false;
+
+            const userData: any = {
+                isSecure: isSecure,
+                userId: user.userId,
+                name: user.name,
+                roleId: user.roleId,
+                birth: user.birth,
+                location: user.location,
+                createdAt: user.createdAt,
+                privilege: dataPrivileges
+            };
+
+            if (isSecure) {
+                userData.email = encryptionHelpers.decrypt(user.email as string, user.loadedSecretKey);
+                userData.phoneNumber = encryptionHelpers.decrypt(user.phoneNumber as string, user.loadedSecretKey);
+            }
+
+            return userData;
+        };
 
         res.status(200).json({
             code: 200,
             message: 'Get User details successfully',
-            data: getUsers(user),
+            data: dataUsers(user),
         });
 
     } catch (error) {
