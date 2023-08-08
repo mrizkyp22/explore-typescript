@@ -2,16 +2,20 @@ import { Request, Response } from 'express';
 import User, { IUser } from '../models/userModel';
 import * as encryptionHelpers from '../middlewares/encryption';
 import { handleServerError, handleBadRequest, handleNotFound, handleNoAccess } from '../utils/errorHandler';
-import { generateUserId } from '../middlewares/generator';
+import { generateUserId } from '../utils/generator';
 import { checkPrivileges } from '../middlewares/privilege';
 import { Privileges, Attribute } from '../models/attributesTypes';
 import { mockPrivilege } from '../models/mockUser';
 import Privilege, { IPrivilege } from '../models/privilegeModel';
 
+const encryptUserFields = (user: IUser) => {
+        user.email = encryptionHelpers.encrypt(user.email);
+        user.phoneNumber = encryptionHelpers.encrypt(user.phoneNumber);
+}
+
 export const registerUser = async (req: Request, res: Response) => {
     try {
         const privilegeDocument: IPrivilege | null = await Privilege.findOne();
-        // Use the mock privilege if not found in the database
         const privilegeAttributes: Attribute[] = privilegeDocument?.attributes || mockPrivilege.attributes;
         const hasCreateUserPrivilege = checkPrivileges(privilegeAttributes, 'create_new_user');
 
@@ -26,32 +30,32 @@ export const registerUser = async (req: Request, res: Response) => {
             return handleBadRequest(res, 'Additional fields are not allowed');
         }
 
-        const user = new User({
+        const user: IUser = new User({
             userId: generateUserId(),
             name,
             roleId,
             birth,
             location,
-            email: encryptionHelpers.encrypt(email),
-            phoneNumber: encryptionHelpers.encrypt(phoneNumber),
+            email: email,
+            phoneNumber: phoneNumber,
             createdAt: new Date().toISOString(),
             loadedSecretKey,
         });
+
+        encryptUserFields(user);
 
         const validationError = user.validateSync();
         if (validationError) {
             return res.status(400).json({ message: 'Validation error', error: validationError });
         }
-
         const savedUser = await user.save();
-        // const privilegeData = privilegeDocument ? { roleId: privilegeDocument.roleId } : null;
 
         res.status(201).json({
             code: 201,
             message: 'User registered successfully',
             data: {
                 userId: savedUser.userId,
-                roleid: savedUser.roleId
+                roleid: savedUser.roleId,
             },
         });
     } catch (error) {
@@ -62,10 +66,8 @@ export const registerUser = async (req: Request, res: Response) => {
 export const getUsers = async (req: Request, res: Response) => {
     try {
         const privilegeDocument: IPrivilege | null = await Privilege.findOne();
-        // Use the mock privilege if not found in the database
         const privilegeAttributes: Attribute[] = privilegeDocument?.attributes || mockPrivilege.attributes;
 
-        // Check if the user has the required attribute
         const hasReadListUserPrivilege = checkPrivileges(privilegeAttributes, 'read_list_user');
 
         if (!hasReadListUserPrivilege) {
@@ -106,12 +108,12 @@ export const getUsers = async (req: Request, res: Response) => {
         ]);
 
         const dataUsers = users.map((user: IUser) => {
-            const isSecure = user.loadedSecretKey ? true : false;
+            const isSecure = !!user.loadedSecretKey;
             return {
                 userId: user.userId,
                 name: user.name,
                 roleid: user.roleId,
-                isSecure: isSecure
+                isSecure: isSecure,
             };
         });
 
@@ -131,10 +133,8 @@ export const getUsers = async (req: Request, res: Response) => {
 export const getUserById = async (req: Request, res: Response) => {
     try {
         const privilegeDocument: IPrivilege | null = await Privilege.findOne();
-        // Use the mock privilege if not found in the database
         const privilegeAttributes: Attribute[] = privilegeDocument?.attributes || mockPrivilege.attributes;
 
-        // Check if the user has the required attribute
         const hasReadDetailUserPrivilege = checkPrivileges(privilegeAttributes, 'read_detail_user');
 
         if (!hasReadDetailUserPrivilege) {
@@ -150,8 +150,6 @@ export const getUserById = async (req: Request, res: Response) => {
         }
 
         const privilegeAttribute = await Privilege.findOne({ roleId: user.roleId });
-
-        // Map privilege data to exclude _id from attributes
         const dataPrivileges = privilegeAttribute ? {
             attributes: privilegeAttribute.attributes.map(attr => ({
                 id: attr.id,
@@ -160,7 +158,7 @@ export const getUserById = async (req: Request, res: Response) => {
         } : null;
 
         const dataUsers = (user: IUser) => {
-            const isSecure = user.loadedSecretKey ? true : false;
+            const isSecure = !!user.loadedSecretKey;
 
             const userData: any = {
                 isSecure: isSecure,
@@ -170,7 +168,7 @@ export const getUserById = async (req: Request, res: Response) => {
                 birth: user.birth,
                 location: user.location,
                 createdAt: user.createdAt,
-                privilege: dataPrivileges
+                privilege: dataPrivileges,
             };
 
             if (isSecure) {
