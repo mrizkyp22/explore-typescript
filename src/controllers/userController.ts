@@ -1,9 +1,9 @@
 import { Request, Response } from 'express';
 import User, { IUser } from '../models/userModel';
-import * as encryptionHelpers from '../helpers/encryption';
-import { handleServerError, handleBadRequest, handleNotFound, handleNoAccess } from '../helpers/errorHandler';
-import { generateUserId } from '../helpers/generator';
-import { checkPrivileges } from '../helpers/privilege';
+import * as encryptionHelpers from '../middlewares/encryption';
+import { handleServerError, handleBadRequest, handleNotFound, handleNoAccess } from '../utils/errorHandler';
+import { generateUserId } from '../middlewares/generator';
+import { checkPrivileges } from '../middlewares/privilege';
 import { Privileges, Attribute } from '../models/attributesTypes';
 import { mockPrivilege } from '../models/mockUser';
 import Privilege, { IPrivilege } from '../models/privilegeModel';

@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import Privilege from '../models/privilegeModel'; // Import the model without interface import
-import { handleServerError, handleBadRequest, handleNotFound, handleNoAccess } from '../helpers/errorHandler';
+import { handleServerError, handleBadRequest, handleNotFound, handleNoAccess } from '../utils/errorHandler';
 
 
 export const getPrivileges = async (req: Request, res: Response) => {
