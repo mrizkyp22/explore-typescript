@@ -15,7 +15,6 @@ export function checkPrivilege(attributeId: string) {
     }
 
     const attribute = privilege.attributes.find(attr => attr.id === attributeId);
-    console.log("attribute",attribute)
     if (!attribute || !attribute.status) {
         handleNoAccess(res,'Access forbidden. You do not have the necessary privilege.')
     } else {

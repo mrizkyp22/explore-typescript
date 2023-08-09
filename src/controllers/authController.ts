@@ -1,3 +1,5 @@
+import * as dotenv from 'dotenv';
+dotenv.config();
 import { Request, Response } from 'express';
 import { generateToken, verifyToken } from '../middlewares/jwt'; // Import JWT functions
 import Auth, { IAuth } from '../models/authModel';
@@ -19,11 +21,10 @@ export const getLogin = async (req: Request, res: Response) => {
     const auth: IAuth | null = await Auth.findOne({ username, password });
 
     if (auth) {
-      const salt = "qweasd123!@"
-      const iv = "WinDigital123!@#"
+      const salt = process.env.SALT
+      const iv = process.env.IV
       const tokenPayload = { 
         username: auth.username, 
-        password:auth.password, 
         roleId: auth.roleId, 
         salt,
         iv
@@ -56,6 +57,7 @@ export const accessToken = async (req: Request, res: Response, next: any) => {
   
       try {
         const decoded = verifyToken(token);
+        console.log(decoded)
         next();
       } catch (error) {
         handleNoAccess(res,'Invalid token')

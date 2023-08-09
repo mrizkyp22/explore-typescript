@@ -5,7 +5,6 @@ import { getLogin, accessToken } from '../controllers/authController';
 const router = express.Router();
 
 router.get('/protected-route',accessToken)
-
 router.post('/login', getLogin)
 
 export default router;
