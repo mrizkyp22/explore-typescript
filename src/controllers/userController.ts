@@ -3,9 +3,6 @@ import User, { IUser } from '../models/userModel';
 import * as encryptionHelpers from '../middlewares/encryption';
 import { handleServerError, handleBadRequest, handleNotFound, handleNoAccess } from '../utils/errorHandler';
 import { generateUserId } from '../utils/generator';
-import { checkPrivileges } from '../middlewares/privilege';
-import { Privileges, Attribute } from '../models/attributesTypes';
-import { mockPrivilege } from '../models/mockUser';
 import Privilege, { IPrivilege } from '../models/privilegeModel';
 
 const encryptUserFields = (user: IUser) => {
