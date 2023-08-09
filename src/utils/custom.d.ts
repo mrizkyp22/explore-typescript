@@ -1,10 +1,10 @@
-// custom.d.ts
-import { Privileges } from '../models/attributesTypes';
+import { Request } from 'express';
+import jwt from 'jsonwebtoken';
 
-declare module 'express-serve-static-core' {
+declare global {
+  namespace Express {
     interface Request {
-        user?: {
-            attributes: Privileges;
-        };
+      auth?: jwt.JwtPayload;
     }
+  }
 }

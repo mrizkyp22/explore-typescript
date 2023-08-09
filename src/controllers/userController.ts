@@ -74,10 +74,13 @@ export const getUsers = async (req: Request, res: Response) => {
             return handleNoAccess(res, 'Access forbidden. You do not have the necessary privilege.');
         }
 
-        const { search, page, limit, ...otherQueries } = req.query as {
+        const { search, page, limit, sortBy, sortOrder, isSecure, ...otherQueries } = req.query as {
             search: string;
             page: string;
             limit: string;
+            sortBy: string; // New query parameter for sorting by
+            sortOrder: 'asc' | 'desc'; // New query parameter for sorting order
+            isSecure: 'true' | 'false';
             [key: string]: string | string[];
         };
 
@@ -90,6 +93,12 @@ export const getUsers = async (req: Request, res: Response) => {
             ];
         }
 
+        if (isSecure === 'true') {
+            query.loadedSecretKey = { $exists: true };
+        } else if (isSecure === 'false') {
+            query.loadedSecretKey = { $exists: false };
+        }
+
         if (Object.keys(otherQueries).length > 0) {
             return handleBadRequest(res, 'Additional queries are not allowed');
         }
@@ -99,9 +108,14 @@ export const getUsers = async (req: Request, res: Response) => {
             limit: limit ? parseInt(limit) : 10,
         };
 
+        const sort: any = {};
+        if (sortBy) {
+            sort[sortBy] = sortOrder === 'asc' ? 1 : -1;
+        }
+
         const [users, userCount] = await Promise.all([
             User.find(query, 'userId name roleId birth location loadedSecretKey createdAt')
-                .sort({ name: 1 })
+                .sort(sort)
                 .skip(options.skip)
                 .limit(options.limit),
             User.countDocuments(query),
@@ -132,17 +146,15 @@ export const getUsers = async (req: Request, res: Response) => {
 
 export const getUserById = async (req: Request, res: Response) => {
     try {
-        const privilegeDocument: IPrivilege | null = await Privilege.findOne();
+        const userId = req.params.userId;
+        const user: IUser | null = await User.findOne({ userId });
+        const privilegeDocument = await Privilege.findOne({roleId:user?.roleId });
         const privilegeAttributes: Attribute[] = privilegeDocument?.attributes || mockPrivilege.attributes;
-
         const hasReadDetailUserPrivilege = checkPrivileges(privilegeAttributes, 'read_detail_user');
 
         if (!hasReadDetailUserPrivilege) {
             return handleNoAccess(res, 'Access forbidden. You do not have the necessary privilege.');
         }
-
-        const userId = req.params.userId;
-        const user: IUser | null = await User.findOne({ userId });
 
         if (!user) {
             console.log('User not found for userId:', userId);

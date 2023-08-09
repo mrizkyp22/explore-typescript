@@ -2,7 +2,9 @@ import express from 'express';
 import mongoose from 'mongoose';
 import bodyParser from 'body-parser';
 import userRoutes from './routes/userRoutes';
-import privilegeRoutes from './routes/privilegeRoutes'; // Add this line
+import privilegeRoutes from './routes/privilegeRoutes'; 
+import authRoutes from './routes/authRoutes'; 
+// Add this line
 
 const app = express();
 
@@ -16,6 +18,7 @@ mongoose
 // Routes
 app.use('/api/users/v1', userRoutes);
 app.use('/api/privileges/v1', privilegeRoutes); // Add this line
+app.use('/api/auth/v1', authRoutes); // Add this line
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
