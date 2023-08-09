@@ -51,7 +51,7 @@ export const getPrivilegeDetail = async (req: Request, res: Response) => {
     const response = {
       code: 200,
       message: 'Get privilege detail successfully',
-      privilege: formattedPrivilege,
+      data: formattedPrivilege,
     };
 
     res.status(200).json(response);

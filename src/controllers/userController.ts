@@ -15,14 +15,6 @@ const encryptUserFields = (user: IUser) => {
 
 export const registerUser = async (req: Request, res: Response) => {
     try {
-        const privilegeDocument: IPrivilege | null = await Privilege.findOne();
-        const privilegeAttributes: Attribute[] = privilegeDocument?.attributes || mockPrivilege.attributes;
-        const hasCreateUserPrivilege = checkPrivileges(privilegeAttributes, 'create_new_user');
-
-        if (!hasCreateUserPrivilege) {
-            return handleNoAccess(res, 'Access forbidden. You do not have the necessary privilege.');
-        }
-
         const { name, roleId, birth, location, email, phoneNumber, ...extraFields } = req.body;
         const loadedSecretKey = encryptionHelpers.loadedSecretKey;
 
@@ -65,15 +57,6 @@ export const registerUser = async (req: Request, res: Response) => {
 
 export const getUsers = async (req: Request, res: Response) => {
     try {
-        const privilegeDocument: IPrivilege | null = await Privilege.findOne();
-        const privilegeAttributes: Attribute[] = privilegeDocument?.attributes || mockPrivilege.attributes;
-
-        const hasReadListUserPrivilege = checkPrivileges(privilegeAttributes, 'read_list_user');
-
-        if (!hasReadListUserPrivilege) {
-            return handleNoAccess(res, 'Access forbidden. You do not have the necessary privilege.');
-        }
-
         const { search, page, limit, sortBy, sortOrder, isSecure, ...otherQueries } = req.query as {
             search: string;
             page: string;
@@ -148,13 +131,6 @@ export const getUserById = async (req: Request, res: Response) => {
     try {
         const userId = req.params.userId;
         const user: IUser | null = await User.findOne({ userId });
-        const privilegeDocument = await Privilege.findOne({roleId:user?.roleId });
-        const privilegeAttributes: Attribute[] = privilegeDocument?.attributes || mockPrivilege.attributes;
-        const hasReadDetailUserPrivilege = checkPrivileges(privilegeAttributes, 'read_detail_user');
-
-        if (!hasReadDetailUserPrivilege) {
-            return handleNoAccess(res, 'Access forbidden. You do not have the necessary privilege.');
-        }
 
         if (!user) {
             console.log('User not found for userId:', userId);

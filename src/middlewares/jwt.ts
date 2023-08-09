@@ -13,3 +13,4 @@ export const verifyToken = (token: string): JwtPayload => {
     throw new Error('Invalid token');
   }
 };
+

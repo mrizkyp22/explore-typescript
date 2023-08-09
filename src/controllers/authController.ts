@@ -20,7 +20,14 @@ export const getLogin = async (req: Request, res: Response) => {
 
     if (auth) {
       const salt = "qweasd123!@"
-      const tokenPayload = { username: auth.username, password:auth.password, salt };
+      const iv = "WinDigital123!@#"
+      const tokenPayload = { 
+        username: auth.username, 
+        password:auth.password, 
+        roleId: auth.roleId, 
+        salt,
+        iv
+      };
       const token = generateToken(tokenPayload);
       const data = {
         username: auth.username,
