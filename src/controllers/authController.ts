@@ -3,7 +3,9 @@ import { generateToken, verifyToken } from '../middlewares/jwt'; // Import JWT f
 import Auth, { IAuth } from '../models/authModel';
 import {
   handleServerError,
-  handleBadRequest
+  handleBadRequest,
+  handleNoAccess,
+  handleUnauthorized
 } from '../utils/errorHandler';
 
 export const getLogin = async (req: Request, res: Response) => {
@@ -32,7 +34,7 @@ export const getLogin = async (req: Request, res: Response) => {
 
       res.json({ message: 'Login successful', data });
     } else {
-      res.status(401).json({ message: 'Login failed' });
+      handleUnauthorized(res, 'Login failed')
     }
   } catch (error) {
     handleServerError(res, error);
@@ -47,16 +49,12 @@ export const accessToken = async (req: Request, res: Response, next: any) => {
   
       try {
         const decoded = verifyToken(token);
-  
-        // You can directly assign the decoded value to req.auth
-        // req.auth = decoded as jwt.JwtPayload;
-  
         next();
       } catch (error) {
-        res.status(403).json({ message: 'Invalid token' });
+        handleNoAccess(res,'Invalid token')
       }
     } else {
-      res.status(401).json({ message: 'Unauthorized' });
+      handleUnauthorized(res, 'Unauthorized')
     }
   };
   

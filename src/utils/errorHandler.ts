@@ -16,3 +16,7 @@ export const handleNotFound = (res: Response, message: string) => {
 export const handleNoAccess = (res: Response, message: string) => {
     return res.status(403).json({ code: 403, message });
 };
+
+export const handleUnauthorized = (res: Response, message: string) => {
+    return res.status(401).json({ code: 401, message });
+};
